@@ -1,10 +1,12 @@
-import express, { json, request, urlencoded } from "express";
+import express, { json, Request, Response, urlencoded } from "express";
 import { createConnection } from "mysql2/promise";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import axios, { Axios, AxiosResponse } from "axios";
 import cors from "cors";
 import * as deepl from "deepl-node";
+import passport from "passport";
+import { Strategy as KakaoStrategy } from "passport-kakao";
 
 import { Festival } from "../type";
 
@@ -66,14 +68,73 @@ async function updateHandler(req: express.Request, res: express.Response) {
 
     allFestival = removeDuplicates(allFestival);
     res.send(allFestival);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error while updating:", error);
-    res
-      .status(500)
-      .send({ reason: "Internal Server Error", error: error.message });
+    res.status(500).send({
+      reason: "Internal Server Error",
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
+////////////////////////////이 밑으론 카카오톡API////////////////////////
+
+passport.use(
+  new KakaoStrategy(
+    {
+      clientID: "YOUR_KAKAO_REST_API_KEY",
+      clientSecret: "", // 선택사항
+      callbackURL: "http://localhost:3000/auth/kakao/callback",
+    },
+    (accessToken, refreshToken, profile, done) => {
+      // 사용자 정보 처리
+      console.log("Kakao Profile:", profile);
+      done(null, profile);
+    }
+  )
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.serializeUser((user: any, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((user: any, done) => {
+  done(null, user);
+});
+
+// 라우팅
+app.use(passport.initialize());
+
+app.get("/auth/kakao", passport.authenticate("kakao"));
+
+app.get(
+  "/auth/kakao/callback",
+  passport.authenticate("kakao", {
+    failureRedirect: "/auth/fail",
+  }),
+  (req: Request, res: Response) => {
+    res.redirect("/auth/success");
+  }
+);
+
+app.get("/auth/success", (req: Request, res: Response) => {
+  res.send("로그인 성공!");
+});
+
+app.get("/auth/fail", (req: Request, res: Response) => {
+  res.send("로그인 실패!");
+});
+
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
+
+////////////////////////////////////////////////////
+////////////////////////////////////////////////////
 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////
@@ -119,18 +180,18 @@ function getLink(monthIncrease: number, page: number): string {
 function getInfo(text: string): Festival {
   let id: string = text.split("event/")[1].split("/")[0].trim();
 
-  ////////////////////////////////////////////////
+  // 이름 title
 
   let title: string = text
     .split('m-mainlist-item__ttl">')[1]
     .split("</span")[0]
     .trim();
 
-  ////////////////////////////////////////////////
+  // 썸네일 thumbnail
 
   let thumbnail: string = text.split('img src="')[1].split('"')[0];
 
-  ////////////////////////////////////////////////
+  // 날짜 date, startDate, endDate
 
   let date: string;
 
@@ -153,9 +214,9 @@ function getInfo(text: string): Festival {
   }
 
   if (date.includes("旬")) {
-    date = date.replaceAll("上旬", "5日");
-    date = date.replaceAll("中旬", "15日");
-    date = date.replaceAll("下旬", "25日");
+    date = date.replace(/上旬/g, "5日");
+    date = date.replace(/中旬/g, "15日");
+    date = date.replace(/下旬/g, "25日");
   }
 
   let festivalPeriod: Date[] = [];
@@ -163,6 +224,17 @@ function getInfo(text: string): Festival {
   //쿼리넣기 따로따로
   // INSERT IGNORE INTO 로 넣으면 UNIQUE KEY값이 같을경우 안들어감
   //INSERT IGNORE INTO 테이블 VALUES ON DUPLICATE KEY UPDATE ('값1', '값2') 해주면 UNIQUE KEY값이 같으면 업데이트함
+
+  // 받아온 축제를 전부 duplicate insert로 작성
+  // 그와 동시에 기간과 태그를 축제id로 연동해 작성
+  // schedule db는 여기 date부분에서 삽입,??이 맞나? 한번에 같이해야하는데 어카지.
+
+  // 상세설명은 vue3 클라이언트에서 번역사용
+  // 서버쪽에서 번역해줘야할건 표기할때 같이 표기하기위한 축제이름,  태그(다른테이블)
+
+  // 카카오톡 로그인 만들기
+  // 축제db에 한국어이름 번역, 클릭된 count 추가 ++ 도시가 아니라 ~현 임. 영어검색해서 수정
+
   switch (true) {
     case /～/.test(date): // 기간동안 하는 경우
       festivalPeriod = getFestivalPeriod(date, "～");
@@ -175,7 +247,7 @@ function getInfo(text: string): Festival {
       break;
   }
 
-  //////////////////////////////////////////
+  // 개최 현 metropolis
 
   let metropolis: string = text
     .split("m-mainlist-item__maplink")[1]
@@ -184,7 +256,7 @@ function getInfo(text: string): Festival {
     .split("</a>")[0]
     .trim();
 
-  //////////////////////////////////////////
+  // 위치 locate
 
   let locate: string = "";
   if (text.split("m-mainlist-item__maplink").length == 3) {
@@ -202,14 +274,14 @@ function getInfo(text: string): Festival {
       .trim();
   }
 
-  ///////////////////////////////////////////////
+  // 장소 place
 
   let place: string = text
     .split("m-mainlist-item-event__place")[1]
     .split("</p>")[0]
     .split(">")[1];
 
-  ////////////////////////////////////////////////
+  // 태그 tagList
 
   let tagList: string[] = [];
   for (
@@ -224,7 +296,7 @@ function getInfo(text: string): Festival {
     tagList.push(tag);
   }
 
-  const result: Festival = {
+  const festival: Festival = {
     id: id,
     title: title,
     thumbnail: thumbnail,
@@ -235,7 +307,7 @@ function getInfo(text: string): Festival {
     tag: tagList,
     isFree: tagList.includes("入場無料"),
   };
-  return result;
+  return festival;
 }
 
 function getFestivalPeriod(text: string, symbol: string): Date[] {

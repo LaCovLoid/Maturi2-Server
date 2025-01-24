@@ -1,15 +1,18 @@
 {
   "dependencies": {
-    "axios": "^1.6.7",
+    "axios": "^1.7.9",
+    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "create-hash": "^1.2.0",
     "crypto": "^1.0.1",
     "deepl-node": "^1.11.1",
     "delay": "^6.0.0",
     "dotenv": "^16.0.3",
-    "express": "^4.18.2",
+    "express": "^4.21.2",
     "mysql2": "^3.2.0",
     "openai": "^4.0.0",
+    "passport": "^0.7.0",
+    "passport-kakao": "^1.0.1",
     "promise": "^8.3.0",
     "request": "^2.88.2",
     "run": "^1.4.0",
@@ -17,9 +20,12 @@
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",
-    "@types/express": "^4.17.17",
+    "@types/express": "^5.0.0",
     "@types/node": "^18.15.11",
-    "sucrase": "^3.31.0"
+    "@types/passport": "^1.0.17",
+    "@types/passport-kakao": "^1.0.3",
+    "sucrase": "^3.31.0",
+    "typescript": "^5.7.3"
   },
   "bin": {
     "sucrase": "./bin/sucrase",
@@ -27,5 +33,11 @@
   },
   "scripts": {
     "start": "yarn sucrase ./src -d ./dist --transforms typescript,imports && node ./dist/index.js"
-  }
+  },
+  "name": "matsuri_server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/LaCovLoid/matsuri_server.git",
+  "author": "LaCovLoid <tnsgus0018@naver.com>",
+  "license": "MIT"
 }
