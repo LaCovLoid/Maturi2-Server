@@ -9,6 +9,8 @@
     "delay": "^6.0.0",
     "dotenv": "^16.0.3",
     "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.2.0",
     "openai": "^4.0.0",
     "passport": "^0.7.0",
@@ -21,6 +23,8 @@
   "devDependencies": {
     "@types/cors": "^2.8.13",
     "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.1",
+    "@types/jsonwebtoken": "^9.0.8",
     "@types/node": "^18.15.11",
     "@types/passport": "^1.0.17",
     "@types/passport-kakao": "^1.0.3",

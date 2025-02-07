@@ -7,19 +7,57 @@ import cors from "cors";
 import * as deepl from "deepl-node";
 import passport from "passport";
 import { Strategy as KakaoStrategy } from "passport-kakao";
+import session from "express-session";
+import generateJWT from "jsonwebtoken";
 
 import { Festival } from "../type";
-
-const app: express.Application = express();
-const port: number = 3000;
-let connection: any;
 
 dotenv.config();
 connectServer();
 
+//https://chatgpt.com/c/67a49d58-5f48-800e-8345-2cf33ef268d8
+
+const clientURL: string = String(process.env.CLIENT_URL);
+const app: express.Application = express();
+const port: number = 3000;
+let connection: any;
+
+passport.use(
+  new KakaoStrategy(
+    {
+      clientID: String(process.env.KAKAO_KEY),
+      clientSecret: "", // 선택사항
+      callbackURL: "http://localhost:3000/auth/kakao/callback", // 링크 변수로 따로 빼내기
+    },
+    (accessToken, refreshToken, profile, done) => {
+      // 사용자 정보 처리
+      //console.log("Kakao Profile:", profile); ///////////유저 정보 여기서 나오네
+      done(null, profile);
+    }
+  )
+);
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+passport.deserializeUser((user: any, done) => {
+  done(null, user);
+});
+
 app.use(cors());
 app.use(json());
 app.use(urlencoded({ extended: true }));
+app.use(
+  session({
+    secret: String(process.env.SSESION_SECRET_KEY), // 세션 암호화에 사용할 키 (환경 변수로 관리 추천)
+    resave: false, // 매 요청마다 세션을 강제로 저장하지 않음
+    saveUninitialized: false, // 초기화되지 않은 세션을 저장하지 않음
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24, // 세션 유지 시간 (여기서는 하루)
+    },
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
@@ -77,61 +115,29 @@ async function updateHandler(req: express.Request, res: express.Response) {
   }
 }
 
-////////////////////////////이 밑으론 카카오톡API////////////////////////
-
-passport.use(
-  new KakaoStrategy(
-    {
-      clientID: "YOUR_KAKAO_REST_API_KEY",
-      clientSecret: "", // 선택사항
-      callbackURL: "http://localhost:3000/auth/kakao/callback",
-    },
-    (accessToken, refreshToken, profile, done) => {
-      // 사용자 정보 처리
-      console.log("Kakao Profile:", profile);
-      done(null, profile);
-    }
-  )
-);
-
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
-
-passport.serializeUser((user: any, done) => {
-  done(null, user);
-});
-
-passport.deserializeUser((user: any, done) => {
-  done(null, user);
-});
-
-// 라우팅
-app.use(passport.initialize());
-
 app.get("/auth/kakao", passport.authenticate("kakao"));
 
 app.get(
   "/auth/kakao/callback",
   passport.authenticate("kakao", {
-    failureRedirect: "/auth/fail",
+    failureRedirect: `${clientURL}?matsuri_login_token=`,
   }),
   (req: Request, res: Response) => {
-    res.redirect("/auth/success");
+    const user = req.user; // 로그인 후 사용자 정보
+    const frontendURL = `${clientURL}/auth/callback`;
+
+    // JWT 토큰 생성
+    const matsuri_login_token = generateJWT.sign(
+      { user },
+      String(process.env.JWT_SECRET_KEY),
+      { expiresIn: "1h" }
+    );
+    console.log(user);
+
+    // 프론트엔드로 리디렉트하면서 쿼리스트링으로 데이터 전달
+    res.redirect(`${frontendURL}?matsuri_login_token=${matsuri_login_token}`);
   }
 );
-
-app.get("/auth/success", (req: Request, res: Response) => {
-  res.send("로그인 성공!");
-});
-
-app.get("/auth/fail", (req: Request, res: Response) => {
-  res.send("로그인 실패!");
-});
-
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
 
 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////
