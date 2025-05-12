@@ -400,6 +400,7 @@ async function translateHandler(req:any, res:any):Promise<any> {
 }
 */
 
+//hash 암호화
 function sha512Hash(str: string): string {
   return crypto.createHash("sha512").update(str).digest("hex");
 }
