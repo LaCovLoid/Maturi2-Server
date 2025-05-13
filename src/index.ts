@@ -198,6 +198,8 @@ function getInfo(text: string): Festival {
   // 날짜 date, startDate, endDate
 
   let date: string;
+  let startDate: string;
+  let endDate: string;
 
   if (text.includes("m-mainlist-item-event__open")) {
     date = text
@@ -217,11 +219,12 @@ function getInfo(text: string): Festival {
       .trim();
   }
 
+  /*
   if (date.includes("旬")) {
     date = date.replace(/上旬/g, "5日");
     date = date.replace(/中旬/g, "15日");
     date = date.replace(/下旬/g, "25日");
-  }
+  }*/
 
   let festivalPeriod: Date[] = [];
 
@@ -403,4 +406,12 @@ async function translateHandler(req:any, res:any):Promise<any> {
 //hash 암호화
 function sha512Hash(str: string): string {
   return crypto.createHash("sha512").update(str).digest("hex");
+}
+
+function getCurrentMaturi(): string {
+  const now: Date = new Date();
+  let month: number = now.getMonth() + 1; // 0 = 1월
+  if (month > 12) month = month % 12;
+  let day: number = now.getDate();
+  return String(month) + String(day);
 }
