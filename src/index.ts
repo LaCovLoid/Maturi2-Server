@@ -10,7 +10,7 @@ import { Strategy as KakaoStrategy } from "passport-kakao";
 import session from "express-session";
 import generateJWT from "jsonwebtoken";
 
-import { Festival } from "../type";
+import { Festival, FestivalDate } from "../type";
 
 dotenv.config();
 connectServer();
@@ -185,24 +185,21 @@ function getInfo(text: string): Festival {
   let id: string = text.split("event/")[1].split("/")[0].trim();
 
   // 이름 title
-
   let title: string = text
     .split('m-mainlist-item__ttl">')[1]
     .split("</span")[0]
     .trim();
 
   // 썸네일 thumbnail
-
   let thumbnail: string = text.split('img src="')[1].split('"')[0];
 
   // 날짜 date, startDate, endDate
   // 하반 중반 상반의 경우 표기
-  let startDate: string;
-  let endDate: string;
-  let dateText: string;
+
+  let originalDateText: string = "";
 
   if (text.includes("m-mainlist-item-event__open")) {
-    dateText = text
+    originalDateText = text
       .split("m-mainlist-item-event__open")[1]
       .replace('<span class="m-mainlist-item-event__end">終了間近</span>', "")
       .split('"')[1]
@@ -211,7 +208,7 @@ function getInfo(text: string): Festival {
       .split("</p>")[0]
       .trim();
   } else {
-    dateText = text
+    originalDateText = text
       .split("m-mainlist-item-event__period")[1]
       .replace('<span class="m-mainlist-item-event__end">終了間近</span>', "")
       .split('">')[1]
@@ -220,19 +217,27 @@ function getInfo(text: string): Festival {
   }
 
   
-  if (dateText.includes("旬")) {
-    if (dateText.includes("上旬")) {
-      dateText = dateText.replace(/上旬/g, "5日");
+  if (originalDateText.includes("旬")) {
+    if (originalDateText.includes("上旬")) {
+      originalDateText = originalDateText.replace(/上旬/g, "5日");
     }
-    if (dateText.includes("中旬")) {
-      dateText = dateText.replace(/中旬/g, "15日");
+    if (originalDateText.includes("中旬")) {
+      originalDateText = originalDateText.replace(/中旬/g, "15日");
     }
-    if (dateText.includes("下旬")) {
-      dateText = dateText.replace(/下旬/g, "25日");
+    if (originalDateText.includes("下旬")) {
+      originalDateText = originalDateText.replace(/下旬/g, "25日");
     }
   }
 
   let festivalPeriod: Date[] = [];
+  
+  // 여기에 저장할 것 <<
+  let festivalDate: FestivalDate = {
+    startYear: 0,
+    startMonth: 0,
+    startDay: 0,
+  };
+
 
   //쿼리넣기 따로따로
   // INSERT IGNORE INTO 로 넣으면 UNIQUE KEY값이 같을경우 안들어감
