@@ -196,13 +196,13 @@ function getInfo(text: string): Festival {
   let thumbnail: string = text.split('img src="')[1].split('"')[0];
 
   // 날짜 date, startDate, endDate
-
-  let date: string;
+  // 하반 중반 상반의 경우 표기
   let startDate: string;
   let endDate: string;
+  let dateText: string;
 
   if (text.includes("m-mainlist-item-event__open")) {
-    date = text
+    dateText = text
       .split("m-mainlist-item-event__open")[1]
       .replace('<span class="m-mainlist-item-event__end">終了間近</span>', "")
       .split('"')[1]
@@ -211,7 +211,7 @@ function getInfo(text: string): Festival {
       .split("</p>")[0]
       .trim();
   } else {
-    date = text
+    dateText = text
       .split("m-mainlist-item-event__period")[1]
       .replace('<span class="m-mainlist-item-event__end">終了間近</span>', "")
       .split('">')[1]
@@ -219,12 +219,18 @@ function getInfo(text: string): Festival {
       .trim();
   }
 
-  /*
-  if (date.includes("旬")) {
-    date = date.replace(/上旬/g, "5日");
-    date = date.replace(/中旬/g, "15日");
-    date = date.replace(/下旬/g, "25日");
-  }*/
+  
+  if (dateText.includes("旬")) {
+    if (dateText.includes("上旬")) {
+      dateText = dateText.replace(/上旬/g, "5日");
+    }
+    if (dateText.includes("中旬")) {
+      dateText = dateText.replace(/中旬/g, "15日");
+    }
+    if (dateText.includes("下旬")) {
+      dateText = dateText.replace(/下旬/g, "25日");
+    }
+  }
 
   let festivalPeriod: Date[] = [];
 
