@@ -2,7 +2,7 @@ export interface Festival {
   id: string;
   title: string;
   thumbnail: string;
-  date: string;
+  dates: string //FestivalDate[]; 로 바꿔야함
   metropolis: string;
   locate: string;
   place: string;
@@ -11,14 +11,7 @@ export interface Festival {
 }
 
 export interface FestivalDate {
-  startYear?: number;
-  startMonth?: number;
-  startDay?: number;
-
-  endYear?: number;
-  endMonth?: number;
-  endDay?: number;
-
-  // 상반 중반 하반이 있는 경우에만
-  displayDate?: string;
+  startDate: Date;
+  endDate?: Date; 
+  displayDate?: string;  //  '상반/중반/하반'이 있을경우에 사용
 }

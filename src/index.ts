@@ -234,12 +234,6 @@ function getInfo(text: string): Festival {
   }
 
   
-  // 여기에 저장할 것 << 결과로만 쓰면 됨
-  let festivalDate: FestivalDate = {
-    startYear: 0,
-    startMonth: 0,
-    startDay: 0,
-  };
 
 
   //쿼리넣기 따로따로
@@ -256,17 +250,101 @@ function getInfo(text: string): Festival {
   // 카카오톡 로그인 만들기
   // 축제db에 한국어이름 번역, 클릭된 count 추가 ++ 도시가 아니라 ~현 임. 영어검색해서 수정
 
+
+  // 기간을 switch로 나눠서 
+
+  const year: number = Number(date.split("年")[0]);
+  const month: number = Number(date.split("年")[1].split("月")[0]) - 1; // 0 = 1월 
+  const day: number = Number(date.split("月")[1].split("日")[0]);
+  
   switch (true) {
     case /～/.test(date): // 기간동안 하는 경우
-      festivalPeriod = getFestivalPeriod(date, "～");
       break;
     case /・/.test(date): // 이틀간 할 경우
-      festivalPeriod = getFestivalPeriod(date, "・");
       break;
     default: //기한이 없을경우
-      festivalPeriod = getFestivalPeriod(date, "=");
       break;
   }
+
+  /*
+  // date를 여기에 저장할 것 << 결과로만 쓰면 됨
+  let festivalDate: FestivalDate = {
+    startYear: 0,
+    startMonth: 0,
+    startDay: 0,
+  };
+*/
+
+/* chat gpt가 알려준 코드
+export interface FestivalDate {
+  start: Date;
+  end?: Date;
+  displayDate?: string;
+}
+
+// 메인 파서 함수
+export function parseFestivalDate(raw: string): FestivalDate[] {
+  switch (true) {
+    case /～/.test(raw): // 기간
+      return parseRangeDate(raw);
+    case /・/.test(raw): // 여러 날짜 분리
+      return parseMultipleDates(raw);
+    default: // 단일 날짜
+      return parseSingleDate(raw);
+  }
+}
+
+// 기간 파싱 (ex. "2025年6月6日(金)～9日(月)")
+function parseRangeDate(raw: string): FestivalDate[] {
+  const [startStr, endStr] = raw.split("～").map(str => str.trim());
+  const start = parseJapaneseDate(startStr);
+  const end = parseJapaneseDateRelative(endStr, start);
+  return [{ start, end }];
+}
+
+// 여러 날짜 파싱 (ex. "2025年6月20日(金)・21日(土)")
+function parseMultipleDates(raw: string): FestivalDate[] {
+  const parts = raw.split("・").map(str => str.trim());
+  const base = parseJapaneseDate(parts[0]);
+  const results: FestivalDate[] = [{ start: base }];
+
+  for (let i = 1; i < parts.length; i++) {
+    const date = parseJapaneseDateRelative(parts[i], base);
+    results.push({ start: date });
+  }
+
+  return results;
+}
+
+// 단일 날짜 파싱 (ex. "2025年6月5日(木)")
+function parseSingleDate(raw: string): FestivalDate[] {
+  return [{ start: parseJapaneseDate(raw) }];
+}
+
+// 완전한 날짜 파싱: "2025年6月6日(金)"
+function parseJapaneseDate(dateStr: string): Date {
+  const match = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+  if (!match) throw new Error(`날짜 파싱 실패: ${dateStr}`);
+
+  const [, year, month, day] = match;
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+}
+
+// 생략된 연/월 보정 (～나 ・ 뒤쪽에서 사용)
+// base: Date 기준으로 년/월이 생략된 경우 보완
+function parseJapaneseDateRelative(part: string, base: Date): Date {
+  const yearMatch = part.match(/(\d{4})年/);
+  const monthMatch = part.match(/(\d{1,2})月/);
+  const dayMatch = part.match(/(\d{1,2})日/);
+
+  const year = yearMatch ? parseInt(yearMatch[1]) : base.getFullYear();
+  const month = monthMatch ? parseInt(monthMatch[1]) - 1 : base.getMonth();
+  if (!dayMatch) throw new Error(`날짜(일) 파싱 실패: ${part}`);
+  const day = parseInt(dayMatch[1]);
+
+  return new Date(year, month, day);
+}
+*/ 
 
   // 개최 현 metropolis
 
@@ -321,13 +399,14 @@ function getInfo(text: string): Festival {
     id: id,
     title: title,
     thumbnail: thumbnail,
-    date: String(date),
+    dates: date,
     metropolis: metropolis,
     locate: locate,
     place: place,
     tag: tagList,
     isFree: tagList.includes("入場無料"),
   };
+
   return festival;
 }
 
