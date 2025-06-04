@@ -196,10 +196,11 @@ function getInfo(text: string): Festival {
   // 날짜 date, startDate, endDate
   // 하반 중반 상반의 경우 표기
 
-  let originalDateText: string = "";
+  let displayDate: string = "";
+  let date: string = "";
 
   if (text.includes("m-mainlist-item-event__open")) {
-    originalDateText = text
+    date = text
       .split("m-mainlist-item-event__open")[1]
       .replace('<span class="m-mainlist-item-event__end">終了間近</span>', "")
       .split('"')[1]
@@ -208,7 +209,7 @@ function getInfo(text: string): Festival {
       .split("</p>")[0]
       .trim();
   } else {
-    originalDateText = text
+    date = text
       .split("m-mainlist-item-event__period")[1]
       .replace('<span class="m-mainlist-item-event__end">終了間近</span>', "")
       .split('">')[1]
@@ -216,22 +217,24 @@ function getInfo(text: string): Festival {
       .trim();
   }
 
-  
-  if (originalDateText.includes("旬")) {
-    if (originalDateText.includes("上旬")) {
-      originalDateText = originalDateText.replace(/上旬/g, "5日");
+  // 상반 중반 하반 표기시 평균값 날짜로 대체
+
+  if (date.includes("旬")) {
+    displayDate = date;
+
+    if (date.includes("上旬")) {
+      date = date.replace(/上旬/g, "5日");
     }
-    if (originalDateText.includes("中旬")) {
-      originalDateText = originalDateText.replace(/中旬/g, "15日");
+    if (date.includes("中旬")) {
+      date = date.replace(/中旬/g, "15日");
     }
-    if (originalDateText.includes("下旬")) {
-      originalDateText = originalDateText.replace(/下旬/g, "25日");
+    if (date.includes("下旬")) {
+      date = date.replace(/下旬/g, "25日");
     }
   }
 
-  let festivalPeriod: Date[] = [];
   
-  // 여기에 저장할 것 <<
+  // 여기에 저장할 것 << 결과로만 쓰면 됨
   let festivalDate: FestivalDate = {
     startYear: 0,
     startMonth: 0,

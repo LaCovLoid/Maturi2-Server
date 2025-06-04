@@ -11,9 +11,9 @@ export interface Festival {
 }
 
 export interface FestivalDate {
-  startYear: number;
-  startMonth: number;
-  startDay: number;
+  startYear?: number;
+  startMonth?: number;
+  startDay?: number;
 
   endYear?: number;
   endMonth?: number;
