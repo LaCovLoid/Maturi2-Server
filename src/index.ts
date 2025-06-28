@@ -235,7 +235,6 @@ function getInfo(text: string): Festival {
 
   
 
-
   //쿼리넣기 따로따로
   // INSERT IGNORE INTO 로 넣으면 UNIQUE KEY값이 같을경우 안들어감
   //INSERT IGNORE INTO 테이블 VALUES ON DUPLICATE KEY UPDATE ('값1', '값2') 해주면 UNIQUE KEY값이 같으면 업데이트함
