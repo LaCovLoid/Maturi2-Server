@@ -197,7 +197,7 @@ function getInfo(text: string): Festival {
   // 하반 중반 상반의 경우 표기
 
   //이부분부터 다시
-  let dummy: string = "";
+  let dummy: string = "";///////////////////////////삭제해야함 "place":"<a class=\"" <<이부분이상함 확인해봐야함
 
   let displayDate: string = "";
   let date: string = "";
@@ -378,9 +378,14 @@ function parseJapaneseDateRelative(part: string, base: Date): Date {
   // 장소 place
 
   let place: string = text
-    .split("m-mainlist-item-event__place")[1]
-    .split("</p>")[0]
-    .split(">")[1];
+    .split("m-mainlist-item-event__place\"")[1]
+    .split("</p>")[0];
+  
+  if (place.includes("<a class=")) {
+    place = place.split("\">")[1].replace("</a>","");
+  }
+  
+  place = place.split("\">")[1];
 
   // 태그 tagList
 
