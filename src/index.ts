@@ -196,6 +196,9 @@ function getInfo(text: string): Festival {
   // 날짜 date, startDate, endDate
   // 하반 중반 상반의 경우 표기
 
+  //이부분부터 다시
+  let dummy: string = "";
+
   let displayDate: string = "";
   let date: string = "";
 
